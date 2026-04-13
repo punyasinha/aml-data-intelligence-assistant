@@ -21,11 +21,12 @@ import chromadb
 from chromadb.config import Settings
 from openai import OpenAI
 
-CHROMA_PATH = "./chroma_db"
+_HERE = Path(__file__).parent.resolve()
+CHROMA_PATH = str(_HERE / "chroma_db")
 COLLECTION_NAME = "dbt_knowledge_base"
-# Manifest paths — relative to rag_assistant/ directory
-MANIFEST_PATH = "../dbt_project/target/manifest.json"
-CATALOG_PATH = "../dbt_project/target/catalog.json"
+# Manifest paths — resolved relative to this file's location
+MANIFEST_PATH = str(_HERE.parent / "dbt_project" / "target" / "manifest.json")
+CATALOG_PATH = str(_HERE.parent / "dbt_project" / "target" / "catalog.json")
 
 
 def is_ingested() -> bool:
