@@ -1,0 +1,9 @@
+target/
+# Keep manifest.json and catalog.json — these are committed so the RAG
+# assistant can be deployed without a live Snowflake connection.
+!target/manifest.json
+!target/catalog.json
+dbt_packages/
+logs/
+profiles.yml
+.DS_Store

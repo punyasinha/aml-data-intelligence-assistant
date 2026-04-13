@@ -1,0 +1,7 @@
+rule_id,rule_name,alert_type,description,threshold_value,threshold_currency,regulatory_basis,is_active,effective_date
+RULE_LCT_001,Large Cash Transaction,LARGE_CASH,Transaction amount meets or exceeds the AUSTRAC cash threshold reporting obligation,10000,AUD,AML/CTF Act 2006 s43,true,2006-12-12
+RULE_STR_002,Structuring Detection,STRUCTURING,Transaction amount falls between 90% and 100% of the LCT threshold indicating potential structuring to avoid reporting,9000,AUD,AML/CTF Act 2006 s136,true,2006-12-12
+RULE_HRC_003,High-Risk Country Transfer,HIGH_RISK_COUNTRY,Wire transfer counterparty is located in a FATF high-risk or AUSTRAC-designated jurisdiction,0,AUD,FATF Recommendations R.19,true,2012-02-16
+RULE_SAN_001,Sanctioned Counterparty,SANCTIONED_COUNTERPARTY,Customer or counterparty appears on OFAC SDN UNSC or Australian sanctions lists,0,AUD,Autonomous Sanctions Act 2011,true,2011-12-01
+RULE_PEP_004,PEP Transaction,PEP_ACTIVITY,Transaction initiated by or on behalf of a Politically Exposed Person requiring enhanced due diligence,0,AUD,AML/CTF Rules 2007 Chapter 4,true,2007-12-12
+RULE_VEL_005,Velocity Alert,VELOCITY,Customer exceeds 5 transactions within a 24-hour period,5,COUNT,Internal Policy AML-POL-003,true,2020-01-01

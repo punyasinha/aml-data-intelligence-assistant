@@ -1,0 +1,111 @@
+version: 2
+
+models:
+  - name: stg_customers
+    description: >
+      Cleaned and standardised customer records from the core banking CRM.
+      Applies consistent casing, derives age and tenure, and casts boolean
+      compliance flags (PEP, sanctions). One row per customer.
+    columns:
+      - name: customer_id
+        description: Unique customer identifier. Primary key.
+        tests:
+          - unique
+          - not_null
+      - name: full_name
+        description: Concatenated first and last name.
+      - name: risk_rating
+        description: AML risk rating — LOW, MEDIUM, or HIGH.
+        tests:
+          - accepted_values:
+              values: ['LOW', 'MEDIUM', 'HIGH']
+      - name: kyc_status
+        description: Current KYC verification status.
+        tests:
+          - accepted_values:
+              values: ['APPROVED', 'PENDING', 'UNDER_REVIEW', 'REJECTED']
+      - name: is_pep
+        description: True if the customer is a Politically Exposed Person.
+        tests:
+          - not_null
+      - name: is_sanctioned
+        description: True if the customer appears on a sanctions watchlist.
+        tests:
+          - not_null
+      - name: days_as_customer
+        description: Number of days since onboarding. Derived at query time.
+      - name: customer_segment
+        description: Customer segment — RETAIL, SME, or CORPORATE.
+        tests:
+          - accepted_values:
+              values: ['RETAIL', 'SME', 'CORPORATE']
+
+  - name: stg_transactions
+    description: >
+      Standardised financial transaction records from the core ledger.
+      Derives AML screening flags (large transaction, near-threshold) and
+      normalises currency, channel, and transaction type fields.
+      One row per transaction.
+    columns:
+      - name: transaction_id
+        description: Unique transaction identifier. Primary key.
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: Foreign key to stg_customers.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_customers')
+              field: customer_id
+      - name: amount_aud
+        description: Transaction amount normalised to AUD.
+        tests:
+          - not_null
+      - name: is_large_transaction
+        description: True if amount_aud >= 10,000 (AUSTRAC large cash threshold).
+      - name: is_near_threshold
+        description: True if amount is between 9,000 and 10,000 (structuring indicator).
+      - name: status
+        description: Transaction processing status.
+        tests:
+          - accepted_values:
+              values: ['COMPLETED', 'PENDING', 'FAILED', 'REVERSED']
+
+  - name: stg_aml_alerts
+    description: >
+      AML alert events from the transaction monitoring system (TMS).
+      Enriches raw alerts with a derived risk_band, days_to_resolve, and
+      standardised status codes. One row per alert.
+    columns:
+      - name: alert_id
+        description: Unique alert identifier. Primary key.
+        tests:
+          - unique
+          - not_null
+      - name: transaction_id
+        description: Foreign key to stg_transactions.
+        tests:
+          - not_null
+      - name: risk_score
+        description: TMS-assigned numeric risk score between 0 and 100.
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 100
+      - name: risk_band
+        description: Derived risk band — LOW (<60), MEDIUM (60-79), HIGH (>=80).
+        tests:
+          - accepted_values:
+              values: ['LOW', 'MEDIUM', 'HIGH']
+      - name: alert_status
+        description: Investigation status — OPEN, CLOSED, or ESCALATED.
+        tests:
+          - accepted_values:
+              values: ['OPEN', 'CLOSED', 'ESCALATED']
+      - name: escalated_to_fiu
+        description: True if the alert was escalated to the Financial Intelligence Unit.
+      - name: days_to_resolve
+        description: Calendar days from alert creation to resolution. Null if still open.

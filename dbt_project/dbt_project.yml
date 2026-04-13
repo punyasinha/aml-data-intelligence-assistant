@@ -1,0 +1,52 @@
+name: aml_intelligence
+version: '1.0.0'
+config-version: 2
+
+profile: aml_intelligence
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  aml_intelligence:
+    staging:
+      +schema: staging
+      +materialized: view
+      +tags: ["staging"]
+    intermediate:
+      +schema: intermediate
+      +materialized: ephemeral
+      +tags: ["intermediate"]
+    marts:
+      +schema: marts
+      +materialized: table
+      +tags: ["marts"]
+
+seeds:
+  # Seeds are ONLY for small, static reference/lookup tables.
+  # Transactional data (customers, transactions, alerts) is loaded into Snowflake
+  # by scripts/generate_and_load.py — or in production, by ADF/Airflow pipelines.
+  aml_intelligence:
+    +schema: reference
+    ref_high_risk_countries:
+      +column_types:
+        country_name: varchar(100)
+        risk_basis: varchar(100)
+        fatf_listed: varchar(5)
+        austrac_listed: varchar(5)
+        updated_date: varchar(10)
+    ref_aml_rules:
+      +column_types:
+        rule_id: varchar(20)
+        threshold_value: float
+        is_active: varchar(5)
+        effective_date: varchar(10)
+
+vars:
+  aml_intelligence:
+    alert_high_risk_threshold: 80
+    transaction_large_amount_aud: 10000

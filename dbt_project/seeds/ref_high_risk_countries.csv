@@ -1,0 +1,23 @@
+country_name,risk_basis,fatf_listed,austrac_listed,updated_date
+Iran,FATF High-Risk,true,true,2024-06-01
+North Korea,FATF High-Risk,true,true,2024-06-01
+Myanmar,FATF High-Risk,true,true,2024-06-01
+Somalia,AUSTRAC High-Risk,false,true,2024-06-01
+Yemen,FATF High-Risk,true,true,2024-06-01
+Libya,AUSTRAC High-Risk,false,true,2024-06-01
+Syria,FATF High-Risk,true,true,2024-06-01
+Sudan,AUSTRAC High-Risk,false,true,2024-06-01
+Russia,FATF Enhanced Monitoring,true,true,2024-06-01
+Belarus,AUSTRAC High-Risk,false,true,2024-06-01
+Cuba,FATF Enhanced Monitoring,true,false,2024-06-01
+Venezuela,FATF Enhanced Monitoring,true,true,2024-06-01
+Cayman Islands,Offshore Financial Centre,false,true,2024-06-01
+BVI,Offshore Financial Centre,false,true,2024-06-01
+Panama,FATF Enhanced Monitoring,true,true,2024-06-01
+Cyprus,Offshore Financial Centre,false,true,2024-06-01
+Malta,FATF Enhanced Monitoring,true,false,2024-06-01
+Vanuatu,Offshore Financial Centre,false,true,2024-06-01
+Marshall Islands,Offshore Financial Centre,false,true,2024-06-01
+Nigeria,AUSTRAC High-Risk,false,true,2024-06-01
+Kenya,FATF Enhanced Monitoring,true,true,2024-06-01
+Mali,FATF High-Risk,true,true,2024-06-01

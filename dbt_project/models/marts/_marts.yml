@@ -1,0 +1,149 @@
+version: 2
+
+models:
+  - name: dim_customer
+    description: >
+      Conformed customer dimension (Type 1 SCD — current state only).
+      Combines KYC attributes, AML risk rating, PEP/sanctions flags,
+      and behavioural risk signals (transaction volumes, alert counts)
+      into a single analytical dimension. Clustered by risk_rating for
+      efficient filtering in Snowflake.
+      One row per customer.
+    columns:
+      - name: customer_key
+        description: Surrogate key (SHA-256 hash of customer_id). Primary key.
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: Natural key from source CRM system.
+        tests:
+          - unique
+          - not_null
+      - name: risk_rating
+        description: KYC-assigned AML risk rating — LOW, MEDIUM, or HIGH.
+        tests:
+          - accepted_values:
+              values: ['LOW', 'MEDIUM', 'HIGH']
+      - name: composite_risk_score
+        description: >
+          Weighted risk score (0–100) combining KYC rating, PEP status,
+          sanctions flag, alert count, and near-threshold transaction patterns.
+          Used to prioritise enhanced due diligence reviews.
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 100
+      - name: enhanced_due_diligence_tier
+        description: >
+          EDD tier derived from composite_risk_score.
+          CRITICAL (>=80), HIGH (60–79), ELEVATED (40–59), STANDARD (<40).
+        tests:
+          - accepted_values:
+              values: ['CRITICAL', 'HIGH', 'ELEVATED', 'STANDARD']
+      - name: is_pep
+        description: True if the customer is a Politically Exposed Person.
+        tests:
+          - not_null
+      - name: is_sanctioned
+        description: True if the customer appears on a sanctions watchlist.
+        tests:
+          - not_null
+
+  - name: dim_date
+    description: >
+      Standard calendar date dimension covering 2017-01-01 to 2026-12-31.
+      Includes Australian fiscal year attributes (Jul–Jun), business day flags,
+      and quarter labels. Conformed dimension — join on date_id (date type).
+    columns:
+      - name: date_id
+        description: Primary key — the calendar date itself (DATE type).
+        tests:
+          - unique
+          - not_null
+      - name: fiscal_year
+        description: Australian fiscal year (July start). E.g. 2024 = FY Jul 2023–Jun 2024.
+      - name: is_weekday
+        description: True for Monday–Friday.
+      - name: is_month_end
+        description: True if the date is the last day of the calendar month.
+
+  - name: fct_transactions
+    description: >
+      Core transaction fact table. Grain is one row per financial transaction.
+      Enriched with AML rule flags from the intermediate flagging layer,
+      customer dimension keys, and alert linkage. Clustered by transaction_date
+      and customer_key for Snowflake query efficiency.
+
+      Key AML metrics surfaced:
+      - flag_large_cash: AUSTRAC LCT threshold breach (>= AUD 10,000)
+      - flag_structuring: Near-threshold transactions (AUD 9,000–9,999)
+      - flag_high_risk_country: Counterparty in FATF high-risk jurisdiction
+      - rules_triggered_count: Number of AML rules triggered per transaction
+    columns:
+      - name: transaction_key
+        description: Surrogate key. Primary key.
+        tests:
+          - unique
+          - not_null
+      - name: transaction_id
+        description: Natural key from core ledger.
+        tests:
+          - unique
+          - not_null
+      - name: customer_key
+        description: Foreign key to dim_customer.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_customer')
+              field: customer_key
+      - name: amount_aud
+        description: Transaction amount in AUD.
+        tests:
+          - not_null
+      - name: is_flagged
+        description: True if any AML rule was triggered for this transaction.
+      - name: has_alert
+        description: True if a TMS alert was generated for this transaction.
+      - name: rules_triggered_count
+        description: Count of distinct AML rules triggered. 0 for clean transactions.
+
+  - name: fct_aml_alerts
+    description: >
+      AML alert fact table. Grain is one row per alert event from the
+      transaction monitoring system. Enriched with transaction context,
+      customer risk attributes, and SLA breach flags.
+
+      Designed for:
+      - Analyst workqueue management (filter by alert_status = OPEN)
+      - SLA monitoring (is_breached_sla, alert_age_days)
+      - FIU referral tracking (escalated_to_fiu, fiu_referral_count)
+      - Rule effectiveness reporting (group by rule_triggered, alert_status)
+    columns:
+      - name: alert_key
+        description: Surrogate key. Primary key.
+        tests:
+          - unique
+          - not_null
+      - name: alert_id
+        description: Natural key from transaction monitoring system.
+        tests:
+          - unique
+          - not_null
+      - name: alert_status
+        description: Current investigation status — OPEN, CLOSED, or ESCALATED.
+        tests:
+          - accepted_values:
+              values: ['OPEN', 'CLOSED', 'ESCALATED']
+      - name: risk_band
+        description: Derived risk band from TMS risk_score — LOW, MEDIUM, or HIGH.
+      - name: is_breached_sla
+        description: True if an OPEN alert has been unresolved for more than 5 days.
+      - name: alert_age_days
+        description: Calendar days since the alert was raised (as of query time).
+      - name: escalated_to_fiu
+        description: True if the alert was referred to the Financial Intelligence Unit.
+      - name: days_to_resolve
+        description: Calendar days from alert creation to resolution. Null if still open.

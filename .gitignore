@@ -1,0 +1,37 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.Python
+
+# Credentials & secrets — never commit these
+.env
+*.p8
+*.pub
+.streamlit/secrets.toml
+rag_assistant/.streamlit/secrets.toml
+
+# dbt
+dbt_project/profiles.yml
+dbt_project/dbt_packages/
+dbt_project/logs/
+dbt_project/target/
+dbt_project/.user.yml
+# Keep manifest and catalog for RAG assistant
+!dbt_project/target/manifest.json
+!dbt_project/target/catalog.json
+
+# ChromaDB vector store — rebuilt on cold start
+rag_assistant/chroma_db/
+chroma_db/
+
+# Logs
+logs/
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
