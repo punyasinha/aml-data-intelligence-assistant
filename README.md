@@ -2,7 +2,7 @@
 
 A production-grade Anti-Money Laundering (AML) data platform with an AI-powered assistant that answers questions about the data models, business logic, lineage, and AML rules — using real dbt project metadata.
 
-**[Live Demo →](https://aml-data-intelligence-assistant.streamlit.app)**
+**[Live Demo →][(https://aml-data-intelligence-assistant.streamlit.app)](https://aml-data-intelligence-assistant-exessgbm6wcdbkprmmmhcb.streamlit.app/)**
 
 ---
 
