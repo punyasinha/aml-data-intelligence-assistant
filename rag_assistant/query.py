@@ -11,13 +11,15 @@ Usage:
 """
 
 import os
+from pathlib import Path
 from typing import Literal
 
 import chromadb
 from chromadb.config import Settings
 from openai import OpenAI
 
-CHROMA_PATH = "./chroma_db"
+_HERE = Path(__file__).parent.resolve()
+CHROMA_PATH = str(_HERE / "chroma_db")
 COLLECTION_NAME = "dbt_knowledge_base"
 TOP_K = 5  # number of retrieved chunks per query
 
@@ -59,7 +61,7 @@ class DataIntelligenceAssistant:
             path=CHROMA_PATH,
             settings=Settings(anonymized_telemetry=False)
         )
-        self.collection = self.chroma_client.get_collection(COLLECTION_NAME)
+        self.collection = self.chroma_client.get_or_create_collection(COLLECTION_NAME)
 
         resolved_key = api_key or os.environ.get("OPENAI_API_KEY")
         if llm_provider == "openai":
